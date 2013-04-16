@@ -1,18 +1,8 @@
 /*global module:false*/
 module.exports = function(grunt) {
 
-    var getStylusPathData = function(grunt) {
-            var controlsPath = grunt.file.expand('tmp/src/controls/**/src/mixins'),
-                utilsPath = grunt.file.expand('tmp/src/utils/**/src/mixins'),
-                variablesPath = 'test/fixtures'
-            pathData = [variablesPath];
-
-            return pathData.concat(controlsPath, utilsPath);
-        };
-
     // Project configuration.
     grunt.initConfig({
-        // Task configuration.
         pkg: grunt.file.readJSON('package.json'),
         gruntfile: {
             src: 'Gruntfile.js'
@@ -28,10 +18,6 @@ module.exports = function(grunt) {
         },
 
         unzip: {
-            controls: {
-                src: 'tmp/src/controls/*.zip',
-                dest: 'tmp/src/controls'
-            },
             utils: {
                 src: 'tmp/src/utils/*.zip',
                 dest: 'tmp/src/utils'
@@ -40,18 +26,17 @@ module.exports = function(grunt) {
 
         clean: {
             tmp: ['tmp'],
-            zip: ['tmp/src/*.zip', 'tmp/src/controls/*.zip', 'tmp/src/skins/*.zip', 'tmp/src/utils/*.zip']
+            zip: ['tmp/src/utils/*.zip']
         },
 
-        stylus: {
-            compile: {
+        compile: {
+            stylus: {
                 options: {
-                    paths: getStylusPathData(grunt),
-                    import: ['EXAMPLE'],
+                    import: ['{{example}}-mixin', 'utils', 'variables'],
                     compress: false
                 },
                 files: {
-                    'release/EXAMPLE.css': ['src/copyright.styl', 'src/EXAMPLE.styl']
+                    'release/css/{{example}}.css': ['src/copyright.styl', 'src/{{example}}.styl']
                 }
             }
         },
@@ -66,41 +51,21 @@ module.exports = function(grunt) {
             }
         },
 
-        stylus: {
-            compile: {
-                options: {
-                    paths: ['src/mixins'],
-                    compress: false
-                },
-                files: {
-                    'release/EXAMPLE.css': ['src/copyright.styl', 'src/EXAMPLE.styl']
-                }
-            },
-            minify: {
-                options: {
-                    paths: ['src/mixins'],
-                    compress: true
-                },
-                files: {
-                    'release/EXAMPLE.min.css': ['src/copyright.styl', 'src/EXAMPLE.styl']
-                }
-            }
-        },
         jade: {
             compile: {
                 expand: true,
                 cwd: 'test/perf',
                 src: ['*.jade'],
                 dest: 'test/perf/',
-                ext: '.html'
+                ext: '.test.html'
             }
         },
         nodeunit: {
-            tests: ['test/*_test.js']
+            tests: ['test/*.test.js']
         },
         watch: {
             files: 'src/*.styl',
-            tasks: ['default']
+            tasks: ['build']
         }
     });
 
@@ -114,7 +79,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
 
+    grunt.loadTasks('tasks');
+
     // Default task.
     grunt.registerTask('default', ['clean', 'topcoat', 'build']);
-    grunt.registerTask('build', ['stylus', 'cssmin', 'jade', 'nodeunit']);
+    grunt.registerTask('build', ['compile', 'cssmin', 'jade', 'nodeunit']);
+
 };
